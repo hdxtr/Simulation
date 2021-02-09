@@ -91,11 +91,11 @@ config = loadConfig('config.json')
 
 swing = Swing(space, config['swingConfig'])
 
-
-while True:
+running = True
+while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            exit()
+            running = False
     space.step(1/60)
     screen.fill((255,255,255))
     space.debug_draw(draw_options)
