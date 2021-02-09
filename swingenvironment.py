@@ -6,7 +6,7 @@ import pandas as pd
 import math
 import matplotlib.pyplot as plt
 import json
-print("test")
+print("test thomas2")
 pygame.init()
 screen = pygame.display.set_mode((1200,600))
 clock = pygame.time.Clock()
