@@ -45,32 +45,32 @@ class Swing():
 
         self.space.add(top, top_shape)
 
-        joints = []
-        joint_shapes = []
+        joints = [] # list of [body, shape]
         pivots = []
-        for i in config['jointLocations']:
+        for i, j in zip(config['jointLocations'], config['jointMasses']):
             '''
             Iterate through the list of coordinates as specified by jointLocations,
             relative to the top of the swing
             '''
-            point = pymunk.Body(10, 100)
+            point = pymunk.Body(j, 100)
             point.position = top.position + Vec2d(*i)
             point_shape = pymunk.Segment(point, (0,0), (0,0), 5)
-            # if the first joint, join to the top, otherwise join to the preceding
-            # joint
+            # if the first joint, join to the top, otherwise join to the preceding joint
             if len(joints) == 0:
                 pivot = pymunk.PinJoint(top, point, (0,0))
             else:
-                pivot = pymunk.PinJoint(joints[-1], point)
+                pivot = pymunk.PinJoint(joints[-1][0], point) # selects the body component of the preceding joint
             pivot.collide_bodies = False
-            joints.append(point)
-            joint_shapes.append(point_shape)
+            joints.append([point, point_shape])
             pivots.append(pivot)
 
             self.space.add(point, point_shape)
             self.space.add(pivot)
 
-        return {'rod' : [joints, joint_shapes], 'top' : [top, top_shape], 'pivots' : pivots}
+        return {'rod' : joints, 'top' : [top, top_shape], 'pivots' : pivots}
+
+    def getJointByNumber(self, num):
+        return self.objects['rod'][num][0]
 
     def render(self, screen):
         pass
@@ -91,14 +91,27 @@ config = loadConfig('config.json')
 
 swing = Swing(space, config['swingConfig'])
 
+data = []
+
 running = True
 while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_UP]:
+        print("applying impulse to +ve x at the final joint")
+        swing.getJointByNumber(-1).apply_impulse_at_local_point(swing.getJointByNumber(-1).mass*Vec2d(10,0))
+    elif keys[pygame.K_DOWN]:
+        print("applying impulse to -ve x at the final joint")
+        swing.getJointByNumber(-1).apply_impulse_at_local_point(swing.getJointByNumber(-1).mass*Vec2d(-10,0))
+    data.append((pygame.time.get_ticks(), swing.getJointByNumber(-1).velocity.x, swing.getJointByNumber(-1).velocity.y))
     space.step(1/60)
     screen.fill((255,255,255))
     space.debug_draw(draw_options)
     pygame.display.flip()
 
     clock.tick(60)
+data = pd.DataFrame(data, columns=['tick', 'vx', 'vy'])
+data.to_csv('data.csv')
+plt.plot(data)
