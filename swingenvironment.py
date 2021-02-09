@@ -11,8 +11,6 @@ pygame.init()
 screen = pygame.display.set_mode((1200,600))
 clock = pygame.time.Clock()
 
-print("Javid test")
-
 space = pymunk.Space()
 space.gravity = (0.0, 900)
 draw_options = pymunk.pygame_util.DrawOptions(screen)
